@@ -10,7 +10,7 @@ OUT_DIR = "bt_outputs"
 os.makedirs(OUT_DIR, exist_ok=True)
 
 START = "2016-01-01"
-END = "2025-12-31"
+END = "2025-10-01"
 
 CASH = 100000.0
 COMMISSION = 0.001

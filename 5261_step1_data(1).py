@@ -13,7 +13,7 @@ tickers = [
     "ACMR", "APPN", "PD", "VERI", "INOD"]
 
 start = "2016-01-01"
-end = "2025-12-31"
+end = "2025-10-01"
 
 #Download data from Yahoo Finance
 yq = Ticker(tickers)
