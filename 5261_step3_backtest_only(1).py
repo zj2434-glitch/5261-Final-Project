@@ -114,7 +114,7 @@ def run_backtest(signal_col, tag, is_benchmark=False):
     else:
         cerebro.addstrategy(SignalStrategy, target_pct=target_pct)
 
-    cerebro.addanalyzer(bt.analyzers.SharpeRatio_A, riskfreerate=RISKFREE, _name="sharpe")
+    #cerebro.addanalyzer(bt.analyzers.SharpeRatio_A, riskfreerate=RISKFREE, _name="sharpe")
     cerebro.addanalyzer(bt.analyzers.DrawDown, _name="dd")
     cerebro.addanalyzer(bt.analyzers.Returns, tann=252, _name="rets")
     cerebro.addanalyzer(bt.analyzers.TradeAnalyzer, _name="trades")
@@ -123,7 +123,7 @@ def run_backtest(signal_col, tag, is_benchmark=False):
     result = cerebro.run()
     strat = result[0]
 
-    sharpe = strat.analyzers.sharpe.get_analysis().get("sharperatio", np.nan)
+    #sharpe = strat.analyzers.sharpe.get_analysis().get("sharperatio", np.nan)
     dd = strat.analyzers.dd.get_analysis()
     rets = strat.analyzers.rets.get_analysis()
     trades = strat.analyzers.trades.get_analysis()
@@ -131,7 +131,15 @@ def run_backtest(signal_col, tag, is_benchmark=False):
     daily_ret = pd.Series(strat.analyzers.timeret.get_analysis())
     daily_ret.index = pd.to_datetime(daily_ret.index)
     daily_ret = daily_ret.fillna(0)
+    
+    mean_daily_ret = daily_ret.mean()
+    volatility = daily_ret.std(ddof=1) * np.sqrt(252)
 
+    if volatility == 0 or pd.isna(volatility):
+        sharpe = np.nan
+    else:
+        sharpe = ((mean_daily_ret * 252) - RISKFREE) / volatility 
+     
     equity = (1 + daily_ret).cumprod()
 
     summary = {
@@ -140,7 +148,7 @@ def run_backtest(signal_col, tag, is_benchmark=False):
         "final_value": cerebro.broker.getvalue(),
         "total_return": rets.get("rtot"),
         "annual_return": rets.get("rnorm"),
-        "volatility": daily_ret.std() * np.sqrt(252),
+        "volatility": volatility,
         "max_drawdown": dd.get("max", {}).get("drawdown"),
         "sharpe": sharpe,
         "total_trades": trades.get("total", {}).get("total"),
