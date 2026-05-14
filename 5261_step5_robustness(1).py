@@ -133,26 +133,33 @@ if __name__ == "__main__":
 
     # 2) Plot bootstrap Sharpe CI for benchmark vs best strategy
     plot_df = bootstrap_df.copy()
-    plot_df["label"] = plot_df["period"] + " | " + plot_df["strategy"]
-
-    plt.figure(figsize=(8, 4))
-    x = np.arange(len(plot_df))
-    y = plot_df["sharpe_bootstrap_median"].values
-    yerr_lower = y - plot_df["sharpe_ci95_lower"].values
-    yerr_upper = plot_df["sharpe_ci95_upper"].values - y
+    plot_df["label"] = plot_df["period"].str.replace("_", "-", regex=False) + " | " + plot_df["strategy"]
+    plot_df = plot_df.sort_values("sharpe_bootstrap_median", ascending=True)
+    plt.figure(figsize=(10, 6))
+    
+    y = plot_df["label"]
+    x = plot_df["sharpe_bootstrap_median"]
+    xerr_low = x - plot_df["sharpe_ci95_lower"]
+    xerr_up = plot_df["sharpe_ci95_upper"] - x
 
     plt.errorbar(
-        x,
-        y,
-        yerr=[yerr_lower, yerr_upper],
+        x, 
+        y, 
+        xerr=[xerr_low, xerr_up], 
         fmt="o",
-        capsize=4
+        capsize=5,
+        color="#2c3e50",
+        ecolor="#3498db", 
+        markersize=8,
+        linewidth=2
     )
-    plt.xticks(x, plot_df["label"], rotation=20, ha="right")
-    plt.ylabel("Bootstrap Sharpe Ratio")
-    plt.title("Robustness: Bootstrap 95% CI of Sharpe Ratio")
+    plt.axvline(0, color='red', linestyle='--', linewidth=1.2, alpha=0.7, label="Sharpe = 0")
+    plt.xlabel("Daily Sharpe Ratio (Bootstrap Median)", fontsize=12)
+    plt.ylabel("Testing Sub-period & Strategy", fontsize=12)
+    plt.title("Bootstrap 95% Confidence Intervals for Sharpe Ratios", fontsize=14, fontweight='bold', pad=15)
+    plt.grid(axis='x', linestyle=':', alpha=0.5)
     plt.tight_layout()
-    plt.savefig(os.path.join(OUT_DIR, "robustness_sharpe_ci.png"), dpi=150)
+    plt.savefig(os.path.join(OUT_DIR, "robustness_sharpe_ci.png"), dpi=300, bbox_inches="tight")
     plt.close()
 
     # 3) Save a tiny helper file for report writing
